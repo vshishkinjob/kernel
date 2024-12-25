@@ -1,0 +1,8 @@
+/vendor
+/Config
+/App
+index.php
+/runtime
+.htaccess
+.idea
+.php-cs-fixer.cache

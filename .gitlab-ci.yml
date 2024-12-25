@@ -1,0 +1,44 @@
+stages:
+    - build
+    - test_and_analyze
+
+
+kernel-api-framework_image:
+  stage: build
+  tags:
+    - Dockerfile
+  script:
+    - docker build --force-rm -t docker-registry.wooppay.com:5000/kernel-api-framework:test build/php/
+    - docker push docker-registry.wooppay.com:5000/kernel-api-framework:test 
+  rules:
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+        changes:
+        - build/php/**
+
+
+
+test:
+  image: docker-registry.wooppay.com:5000/kernel-api-framework:test
+  variables:
+    EXTRA_HOSTS: "$dbweb_ip dbweb $dbtps_ip dbtps $dblogic_replica_ip dblogic replica $tps_ip tps"
+  tags:
+    - docker_new
+  stage: test_and_analyze
+  script:  
+    - echo "$EXTRA_HOSTS" > /etc/hosts
+    - composer install
+    - php vendor/bin/codecept run Unit
+  rules:
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+
+merge_analyzer:
+  image: docker-registry.wooppay.com:5000/kernel-api-framework:test
+  tags:
+    - docker_new
+  stage: test_and_analyze
+  script:
+    - composer install
+    - echo $CI_MERGE_REQUEST_IID
+    - php ./hooks/analyzerScript.php --environment=master --merge_id=$CI_MERGE_REQUEST_IID --project_id=313 --folder_path=./Kernel
+  rules:
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'

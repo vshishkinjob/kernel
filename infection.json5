@@ -1,0 +1,16 @@
+{
+    "source": {
+        "directories": [
+            "OpenApi"
+        ],
+        "excludes": [
+            "Config",
+        ]
+    },
+    "logs": {
+        "text": "runtime/infection.log"
+    },
+    "mutators": {
+        "@default": true
+    }
+}
